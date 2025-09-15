@@ -89,7 +89,7 @@ export default function CategoryPage({category, products, parentCategory}) {
             </CategoryDescription>
           )}
           <ProductCount>
-            {products.length} {products.length === 1 ? &apos;product&apos; : &apos;products&apos;} in this category
+            {products.length} {products.length === 1 ? 'product' : 'products'} in this category
           </ProductCount>
         </CategoryInfo>
 
