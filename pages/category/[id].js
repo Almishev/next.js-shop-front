@@ -66,7 +66,7 @@ export default function CategoryPage({category, products, parentCategory}) {
         <Header />
         <Center>
           <Title>Category not found</Title>
-          <p>The category you're looking for doesn't exist.</p>
+          <p>The category you&apos;re looking for doesn&apos;t exist.</p>
           <Link href="/categories">← Back to Categories</Link>
         </Center>
       </>
@@ -89,7 +89,7 @@ export default function CategoryPage({category, products, parentCategory}) {
             </CategoryDescription>
           )}
           <ProductCount>
-            {products.length} {products.length === 1 ? 'product' : 'products'} in this category
+            {products.length} {products.length === 1 ? &apos;product&apos; : &apos;products&apos;} in this category
           </ProductCount>
         </CategoryInfo>
 

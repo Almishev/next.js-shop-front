@@ -110,7 +110,7 @@ export default function CartPage() {
       setIsSuccess(true);
       clearCart();
     }
-  }, []);
+  }, [clearCart]);
 
   // Пускаме конфети при успешна поръчка (динамичен импорт за SSR съвместимост)
   useEffect(() => {

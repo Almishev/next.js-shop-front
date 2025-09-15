@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import Center from "@/components/Center";
+import Link from "next/link";
 
 const StyledFooter = styled.footer`
   background-color: #222;
@@ -174,25 +175,25 @@ export default function Footer() {
           <FooterSection>
             <h3>Категории</h3>
             <ul>
-              <li><a href="/products">Всички продукти</a></li>
-              <li><a href="/products?category=gerdani">Гердани от перли</a></li>
-              <li><a href="/products?category=griuni">Гривни от лава</a></li>
-              <li><a href="/products?category=komplekti">Комплекти</a></li>
-              <li><a href="/products?category=mashki">Мъжки бижута</a></li>
-              <li><a href="/products?category=damski">Дамски бижута</a></li>
-              <li><a href="/products?category=manista">Бижута с маниста</a></li>
+              <li><Link href="/products">Всички продукти</Link></li>
+              <li><Link href="/products?category=gerdani">Гердани от перли</Link></li>
+              <li><Link href="/products?category=griuni">Гривни от лава</Link></li>
+              <li><Link href="/products?category=komplekti">Комплекти</Link></li>
+              <li><Link href="/products?category=mashki">Мъжки бижута</Link></li>
+              <li><Link href="/products?category=damski">Дамски бижута</Link></li>
+              <li><Link href="/products?category=manista">Бижута с маниста</Link></li>
             </ul>
           </FooterSection>
 
           <FooterSection>
             <h3>Информация</h3>
             <ul>
-              <li><a href="/about">За нас</a></li>
-              <li><a href="/care">Грижа за бижутата</a></li>
-              <li><a href="/gift-cards">Подаръчни карти</a></li>
-              <li><a href="/custom-orders">Поръчки по избор</a></li>
-              <li><a href="/privacy-policy">Политика на поверителност</a></li>
-              <li><a href="/terms">Общи условия</a></li>
+              <li><Link href="/about">За нас</Link></li>
+              <li><Link href="/care">Грижа за бижутата</Link></li>
+              <li><Link href="/gift-cards">Подаръчни карти</Link></li>
+              <li><Link href="/custom-orders">Поръчки по избор</Link></li>
+              <li><Link href="/privacy-policy">Политика на поверителност</Link></li>
+              <li><Link href="/terms">Общи условия</Link></li>
             </ul>
           </FooterSection>
 
