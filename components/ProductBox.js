@@ -109,13 +109,13 @@ export default function ProductBox({_id,title,description,price,images}) {
     
     if (inWishlist) {
       removeFromWishlist(_id);
-      toast.success(`${title} е премахнат от wishlist!`, {
+      toast.success(`${title} е премахнат от желаните!`, {
         icon: '💔',
         duration: 3000,
       });
     } else {
       addToWishlist(_id);
-      toast.success(`${title} е добавен в wishlist!`, {
+      toast.success(`${title} е добавен в желаните!`, {
         icon: '❤️',
         duration: 3000,
       });
@@ -143,7 +143,7 @@ export default function ProductBox({_id,title,description,price,images}) {
             ${price}
           </Price>
           <Button block onClick={handleAddToCart} primary outline>
-            Add to cart
+            Добави в кошница
           </Button>
         </PriceRow>
       </ProductInfoBox>

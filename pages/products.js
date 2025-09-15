@@ -13,9 +13,9 @@ export default function ProductsPage({products}) {
     <>
       <Header />
       <Center>
-        <Title>All products</Title>
+        <Title>Всички продукти</Title>
         {products.length === 0 ? (
-          <div>No products found. Total: {products.length}</div>
+          <div>Няма намерени продукти. Общо: {products.length}</div>
         ) : (
           <ProductsGrid products={products} />
         )}

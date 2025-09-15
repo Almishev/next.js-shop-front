@@ -29,6 +29,15 @@ const CategoryCard = styled(Link)`
   }
 `;
 
+const CategoryImage = styled.img`
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: #f3f3f3;
+`;
+
 const CategoryTitle = styled.h3`
   margin: 0 0 10px 0;
   font-size: 1.2rem;
@@ -54,19 +63,22 @@ export default function CategoriesPage({categories}) {
     <>
       <Header />
       <Center>
-        <Title>Categories</Title>
+        <Title>Категории</Title>
         {categories.length === 0 ? (
-          <div>No categories found.</div>
+          <div>Няма намерени категории.</div>
         ) : (
           <CategoryGrid>
             {categories.map(category => (
               <CategoryCard key={category._id} href={`/category/${category._id}`}>
+                {category.image && (
+                  <CategoryImage src={category.image} alt={category.name} />
+                )}
                 <CategoryTitle>{category.name}</CategoryTitle>
                 <CategoryDescription>
-                  {category.parent ? `Subcategory of ${category.parent.name}` : 'Main category'}
+                  {category.parent ? `Подкатегория на ${category.parent.name}` : 'Основна категория'}
                 </CategoryDescription>
                 <ProductCount>
-                  {category.productCount || 0} products
+                  {category.productCount || 0} продукта
                 </ProductCount>
               </CategoryCard>
             ))}

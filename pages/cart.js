@@ -72,6 +72,7 @@ export default function CartPage() {
   const [products,setProducts] = useState([]);
   const [name,setName] = useState('');
   const [email,setEmail] = useState('');
+  const [phone,setPhone] = useState('');
   const [city,setCity] = useState('');
   const [postalCode,setPostalCode] = useState('');
   const [streetAddress,setStreetAddress] = useState('');
@@ -93,8 +94,8 @@ export default function CartPage() {
     // Взимаме shipping price от settings
     axios.get('/api/settings')
       .then(response => {
-        if (response.data.shippingPrice) {
-          setShippingPrice(response.data.shippingPrice);
+        if (response.data.shippingPrice !== undefined && response.data.shippingPrice !== null) {
+          setShippingPrice(Number(response.data.shippingPrice));
         }
       })
       .catch(error => {
@@ -110,6 +111,50 @@ export default function CartPage() {
       clearCart();
     }
   }, []);
+
+  // Пускаме конфети при успешна поръчка (динамичен импорт за SSR съвместимост)
+  useEffect(() => {
+    if (!isSuccess) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const confetti = (await import('canvas-confetti')).default;
+        if (cancelled) return;
+        confetti({
+          particleCount: 140,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        setTimeout(() => {
+          if (cancelled) return;
+          confetti({ particleCount: 100, angle: 60, spread: 55, origin: { x: 0 } });
+          confetti({ particleCount: 100, angle: 120, spread: 55, origin: { x: 1 } });
+        }, 250);
+      } catch (e) {
+        // ако библиотеката не е инсталирана, просто пропускаме
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isSuccess]);
+
+  // Попълваме формата автоматично с данните от акаунта, ако има записан имейл
+  useEffect(() => {
+    try {
+      const savedEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+      if (savedEmail) {
+        setEmail(savedEmail);
+        axios.get(`/api/user?email=${savedEmail}`).then(res => {
+          if (res.data) {
+            setName(res.data.name || '');
+            setCity(res.data.city || '');
+            setPostalCode(res.data.postalCode || '');
+            setStreetAddress(res.data.streetAddress || '');
+            setCountry(res.data.country || '');
+          }
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }, []);
   function moreOfThisProduct(id) {
     addProduct(id);
   }
@@ -117,12 +162,46 @@ export default function CartPage() {
     removeProduct(id);
   }
   async function goToPayment() {
-    const response = await axios.post('/api/checkout', {
-      name,email,city,postalCode,streetAddress,country,
+    // Валидация на полетата
+    if (!name || !email || !phone || !city || !postalCode || !streetAddress || !country) {
+      alert('Моля, попълнете всички полета');
+      return;
+    }
+    
+    // Валидация на имейла
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Моля, въведете валиден имейл адрес');
+      return;
+    }
+    
+    // Валидация на телефонния номер
+    const phoneRegex = /^[0-9+\-\s()]+$/;
+    if (!phoneRegex.test(phone) || phone.length < 8) {
+      alert('Моля, въведете валиден телефонен номер');
+      return;
+    }
+    
+    console.log('Sending checkout data:', {
+      name,email,phone,city,postalCode,streetAddress,country,
       cartProducts,shippingPrice,
     });
-    if (response.data.url) {
-      window.location = response.data.url;
+    
+    try {
+      const response = await axios.post('/api/checkout', {
+        name,email,phone,city,postalCode,streetAddress,country,
+        cartProducts,shippingPrice: Number(shippingPrice),
+      });
+      if (response.data.success) {
+        // За наложен платеж - директно показваме успех
+        setIsSuccess(true);
+        clearCart();
+      } else {
+        alert('Грешка при създаване на поръчката: ' + response.data.error);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Грешка при създаване на поръчката. Моля, опитайте отново.');
     }
   }
   let subtotal = 0;
@@ -130,7 +209,7 @@ export default function CartPage() {
     const price = products.find(p => p._id === productId)?.price || 0;
     subtotal += price;
   }
-  const total = subtotal + shippingPrice;
+  const total = subtotal + Number(shippingPrice || 0);
 
   if (isSuccess) {
     return (
@@ -139,8 +218,9 @@ export default function CartPage() {
         <Center>
           <ColumnsWrapper>
             <Box>
-              <h1>Thanks for your order!</h1>
-              <p>We will email you when your order will be sent.</p>
+              <h1>Благодарим за поръчката!</h1>
+              <p>Поръчката е създадена успешно. Ще платите при доставка (наложен платеж).</p>
+              <p>Ще ви изпратим имейл, когато поръчката бъде изпратена.</p>
             </Box>
           </ColumnsWrapper>
         </Center>
@@ -154,17 +234,17 @@ export default function CartPage() {
       <Center>
         <ColumnsWrapper>
           <Box>
-            <h2>Cart</h2>
+            <h2>Кошница</h2>
             {!cartProducts?.length && (
-              <div>Your cart is empty</div>
+              <div>Вашата кошница е празна</div>
             )}
             {products?.length > 0 && (
               <Table>
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
+                    <th>Продукт</th>
+                    <th>Количество</th>
+                    <th>Цена</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,24 +266,24 @@ export default function CartPage() {
                           onClick={() => moreOfThisProduct(product._id)}>+</Button>
                       </td>
                       <td>
-                        ${cartProducts.filter(id => id === product._id).length * product.price}
+                        {cartProducts.filter(id => id === product._id).length * product.price} BGN
                       </td>
                     </tr>
                   ))}
                   <tr>
                     <td></td>
-                    <td>Subtotal:</td>
-                    <td>${subtotal}</td>
+                    <td>Междинна сума:</td>
+                    <td>{subtotal} BGN</td>
                   </tr>
                   <tr>
                     <td></td>
-                    <td>Shipping:</td>
-                    <td>${shippingPrice}</td>
+                    <td>Доставка:</td>
+                    <td>{shippingPrice} BGN</td>
                   </tr>
                   <tr>
                     <td></td>
-                    <td><strong>Total:</strong></td>
-                    <td><strong>${total}</strong></td>
+                    <td><strong>Общо:</strong></td>
+                    <td><strong>{total} BGN</strong></td>
                   </tr>
                 </tbody>
               </Table>
@@ -211,42 +291,47 @@ export default function CartPage() {
           </Box>
           {!!cartProducts?.length && (
             <Box>
-              <h2>Order information</h2>
+              <h2>Информация за поръчката</h2>
               <Input type="text"
-                     placeholder="Name"
+                     placeholder="Име"
                      value={name}
                      name="name"
                      onChange={ev => setName(ev.target.value)} />
-              <Input type="text"
-                     placeholder="Email"
+              <Input type="email"
+                     placeholder="Имейл"
                      value={email}
                      name="email"
                      onChange={ev => setEmail(ev.target.value)}/>
+              <Input type="tel"
+                     placeholder="Телефонен номер"
+                     value={phone}
+                     name="phone"
+                     onChange={ev => setPhone(ev.target.value)}/>
               <CityHolder>
                 <Input type="text"
-                       placeholder="City"
+                       placeholder="Град"
                        value={city}
                        name="city"
                        onChange={ev => setCity(ev.target.value)}/>
                 <Input type="text"
-                       placeholder="Postal Code"
+                       placeholder="Пощенски код"
                        value={postalCode}
                        name="postalCode"
                        onChange={ev => setPostalCode(ev.target.value)}/>
               </CityHolder>
               <Input type="text"
-                     placeholder="Street Address"
+                     placeholder="Адрес"
                      value={streetAddress}
                      name="streetAddress"
                      onChange={ev => setStreetAddress(ev.target.value)}/>
               <Input type="text"
-                     placeholder="Country"
+                     placeholder="Държава"
                      value={country}
                      name="country"
                      onChange={ev => setCountry(ev.target.value)}/>
               <Button black block
                       onClick={goToPayment}>
-                Continue to payment
+                Поръчай с наложен платеж
               </Button>
             </Box>
           )}

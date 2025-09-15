@@ -149,6 +149,7 @@ export default function Footer() {
               <p>
                 Специализирани в ръчно изработени гердани, гривни и комплекти от лава, 
                 маниста и перли. Уникални бижута за дами и мъже, идеални за всеки повод.
+                Всички наши продукти са направени с любов и внимание към детайла.
               </p>
               <SocialLinks>
                 <a href="#" title="Facebook">
@@ -174,12 +175,12 @@ export default function Footer() {
             <h3>Категории</h3>
             <ul>
               <li><a href="/products">Всички продукти</a></li>
-              <li><a href="/categories">Категории</a></li>
-              <li><a href="/products?category=gerdani">Гердани</a></li>
-              <li><a href="/products?category=griuni">Гривни</a></li>
+              <li><a href="/products?category=gerdani">Гердани от перли</a></li>
+              <li><a href="/products?category=griuni">Гривни от лава</a></li>
               <li><a href="/products?category=komplekti">Комплекти</a></li>
               <li><a href="/products?category=mashki">Мъжки бижута</a></li>
               <li><a href="/products?category=damski">Дамски бижута</a></li>
+              <li><a href="/products?category=manista">Бижута с маниста</a></li>
             </ul>
           </FooterSection>
 
@@ -187,11 +188,11 @@ export default function Footer() {
             <h3>Информация</h3>
             <ul>
               <li><a href="/about">За нас</a></li>
-              <li><a href="/delivery">Доставка</a></li>
-              <li><a href="/returns">Връщане</a></li>
-              <li><a href="/size-guide">Ръководство за размери</a></li>
               <li><a href="/care">Грижа за бижутата</a></li>
               <li><a href="/gift-cards">Подаръчни карти</a></li>
+              <li><a href="/custom-orders">Поръчки по избор</a></li>
+              <li><a href="/privacy-policy">Политика на поверителност</a></li>
+              <li><a href="/terms">Общи условия</a></li>
             </ul>
           </FooterSection>
 
@@ -223,7 +224,7 @@ export default function Footer() {
         <BottomBar>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px'}}>
             <div>
-              © 2024 Artisan Jewelry. Всички права запазени.
+              © {new Date().getFullYear()} Artisan Jewelry. Всички права запазени.
             </div>
             <PaymentMethods>
               <div className="payment-icon">VISA</div>

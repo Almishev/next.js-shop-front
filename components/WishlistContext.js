@@ -10,7 +10,7 @@ export const WishlistProvider = ({ children }) => {
   const addToWishlist = async (productId) => {
     const userEmail = localStorage.getItem('userEmail');
     if (!userEmail) {
-      alert('Please login to add items to wishlist');
+      alert('Моля, влезте в акаунта си за да добавите продукти в желаните');
       return;
     }
 
@@ -24,7 +24,7 @@ export const WishlistProvider = ({ children }) => {
       await fetchWishlist(userEmail);
     } catch (error) {
       console.error('Error adding to wishlist:', error);
-      alert('Error adding to wishlist');
+      alert('Грешка при добавяне в желаните');
     }
   };
 
@@ -41,7 +41,7 @@ export const WishlistProvider = ({ children }) => {
       await fetchWishlist(userEmail);
     } catch (error) {
       console.error('Error removing from wishlist:', error);
-      alert('Error removing from wishlist');
+      alert('Грешка при премахване от желаните');
     }
   };
 

@@ -47,10 +47,11 @@ const Tab = styled.button`
 `;
 
 const OrderItem = styled.div`
-  border: 1px solid #eee;
+  border: 2px solid #ddd;
   border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #fafafa;
 `;
 
 const OrderHeader = styled.div`
@@ -77,7 +78,16 @@ const OrderStatus = styled.span`
 const OrderDetails = styled.div`
   color: #666;
   font-size: 0.9rem;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+  
+  div {
+    margin-bottom: 5px;
+  }
+  
+  strong {
+    color: #333;
+  }
 `;
 
 const OrderTotal = styled.div`
@@ -139,7 +149,7 @@ export default function AccountPage() {
       fetchOrders(savedEmail);
       fetchUserData(savedEmail);
     } else {
-      const userEmail = prompt('Please enter your email to view orders:');
+      const userEmail = prompt('Моля, въведете вашия имейл за да видите поръчките:');
       if (userEmail) {
         setEmail(userEmail);
         localStorage.setItem('userEmail', userEmail);
@@ -178,7 +188,7 @@ export default function AccountPage() {
 
   const handleSave = async () => {
     if (!email || !name || !city || !postalCode || !streetAddress || !country) {
-      alert('Please fill in all fields');
+      alert('Моля, попълнете всички полета');
       return;
     }
 
@@ -192,10 +202,10 @@ export default function AccountPage() {
         streetAddress,
         country
       });
-      alert('Account details saved successfully!');
+      alert('Детайлите за акаунта са запазени успешно!');
     } catch (error) {
       console.error('Error saving user data:', error);
-      alert('Error saving account details');
+      alert('Грешка при запазване на детайлите за акаунта');
     } finally {
       setSaving(false);
     }
@@ -235,39 +245,40 @@ export default function AccountPage() {
                 active={activeTab === 'orders'} 
                 onClick={() => setActiveTab('orders')}
               >
-                Orders
+                Поръчки
               </Tab>
               <Tab 
                 active={activeTab === 'wishlist'} 
                 onClick={() => setActiveTab('wishlist')}
               >
-                Wishlist
+                Желани продукти
               </Tab>
             </TabsWrapper>
 
             {activeTab === 'orders' && (
               <div>
-                <h2>Your Orders</h2>
+                <h2>Вашите поръчки</h2>
                 {loading ? (
-                  <div>Loading orders...</div>
+                  <div>Зареждане на поръчки...</div>
                 ) : orders.length === 0 ? (
-                  <div>No orders found.</div>
+                  <div>Няма намерени поръчки.</div>
                 ) : (
                   orders.map(order => (
                     <OrderItem key={order._id}>
                       <OrderHeader>
                         <OrderDate>{formatDate(order.createdAt)}</OrderDate>
                         <OrderStatus paid={order.paid}>
-                          {order.paid ? 'Paid' : 'Pending'}
+                          {order.paid ? 'Платена' : 'Наложен платеж'}
                         </OrderStatus>
                       </OrderHeader>
                       <OrderDetails>
-                        <div><strong>Name:</strong> {order.name}</div>
-                        <div><strong>Email:</strong> {order.email}</div>
-                        <div><strong>Address:</strong> {order.streetAddress}, {order.city} {order.postalCode}, {order.country}</div>
+                        <div><strong>Име:</strong> {order.name}</div>
+                        <div><strong>Имейл:</strong> {order.email}</div>
+                        {order.phone && <div><strong>📞 Телефон:</strong> <span style={{color: '#2563eb', fontWeight: 'bold'}}>{order.phone}</span></div>}
+                        <div><strong>Адрес:</strong> {order.streetAddress}, {order.city} {order.postalCode}, {order.country}</div>
                       </OrderDetails>
                       <OrderTotal>
-                        Total: ${calculateTotal(order.line_items).toFixed(2)}
+                        Общо: {calculateTotal(order.line_items).toFixed(2)} BGN
                       </OrderTotal>
                     </OrderItem>
                   ))
@@ -277,11 +288,11 @@ export default function AccountPage() {
 
             {activeTab === 'wishlist' && (
               <div>
-                <h2>Your Wishlist</h2>
+                <h2>Вашите желани продукти</h2>
                 {wishlistLoading ? (
-                  <div>Loading wishlist...</div>
+                  <div>Зареждане на желани продукти...</div>
                 ) : wishlistProducts.length === 0 ? (
-                  <div>No items in your wishlist yet.</div>
+                  <div>Все още няма продукти в желаните.</div>
                 ) : (
                   <ProductsGrid products={wishlistProducts} />
                 )}
@@ -290,47 +301,47 @@ export default function AccountPage() {
           </Box>
 
           <Box>
-            <h2>Account details</h2>
+            <h2>Детайли за акаунта</h2>
             <Input
               type="text"
-              placeholder="Name"
+              placeholder="Име"
               value={name}
               onChange={ev => setName(ev.target.value)}
             />
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="Имейл"
               value={email}
               onChange={ev => setEmail(ev.target.value)}
             />
             <Input
               type="text"
-              placeholder="City"
+              placeholder="Град"
               value={city}
               onChange={ev => setCity(ev.target.value)}
             />
             <Input
               type="text"
-              placeholder="Postal Code"
+              placeholder="Пощенски код"
               value={postalCode}
               onChange={ev => setPostalCode(ev.target.value)}
             />
             <Input
               type="text"
-              placeholder="Street Address"
+              placeholder="Адрес"
               value={streetAddress}
               onChange={ev => setStreetAddress(ev.target.value)}
             />
             <Input
               type="text"
-              placeholder="Country"
+              placeholder="Държава"
               value={country}
               onChange={ev => setCountry(ev.target.value)}
             />
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? 'Запазване...' : 'Запази'}
             </Button>
-            <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+            <LogoutButton onClick={handleLogout}>Изход</LogoutButton>
           </Box>
         </ColumnsWrapper>
       </Center>
