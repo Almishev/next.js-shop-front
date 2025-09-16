@@ -3,9 +3,11 @@ import styled from "styled-components";
 const VideoWrapper = styled.div`
   position: relative;
   width: 100%;
-  height: 60vh;
-  overflow: hidden;
   background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 
   @media (max-width: 768px) {
     body.menu-open & {
@@ -15,15 +17,13 @@ const VideoWrapper = styled.div`
 `;
 
 const Video = styled.video`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  min-width: 100%;
-  min-height: 100%;
+  position: static;
   width: auto;
   height: auto;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  display: block;
 `;
 
 export default function HeroVideo() {
