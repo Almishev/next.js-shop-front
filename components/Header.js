@@ -1,7 +1,7 @@
 import Link from "next/link";
 import styled from "styled-components";
 import Center from "@/components/Center";
-import {useContext, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {CartContext} from "@/components/CartContext";
 import BarsIcon from "@/components/icons/Bars";
 
@@ -33,6 +33,8 @@ const StyledNav = styled.nav`
   right: 0;
   padding: 70px 20px 20px;
   background-color: #222;
+  z-index: 9999; /* над всичко */
+  overflow-y: auto;
   @media screen and (min-width: 768px) {
     display: flex;
     position: static;
@@ -55,8 +57,15 @@ const NavButton = styled.button`
   border:0;
   color: white;
   cursor: pointer;
-  position: relative;
-  z-index: 3;
+  ${props => props.mobileOpen ? `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+  ` : `
+    position: relative;
+    z-index: 3;
+  `}
   @media screen and (min-width: 768px) {
     display: none;
   }
@@ -66,19 +75,24 @@ const NavButton = styled.button`
 export default function Header() {
   const {cartProducts} = useContext(CartContext);
   const [mobileNavActive,setMobileNavActive] = useState(false);
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('menu-open', mobileNavActive);
+    }
+  }, [mobileNavActive]);
   return (
     <StyledHeader>
       <Center>
         <Wrapper>
           <Logo href={'/'}>Artisan Jewelry</Logo>
-          <StyledNav mobileNavActive={mobileNavActive}>
+          <StyledNav className={mobileNavActive ? 'mobile-nav' : ''} mobileNavActive={mobileNavActive}>
             <NavLink href={'/'}>Начало</NavLink>
             <NavLink href={'/products'}>Всички продукти</NavLink>
             <NavLink href={'/categories'}>Категории</NavLink>
             <NavLink href={'/account'}>Акаунт</NavLink>
             <NavLink href={'/cart'}>Кошница ({cartProducts.length})</NavLink>
           </StyledNav>
-          <NavButton onClick={() => setMobileNavActive(prev => !prev)}>
+          <NavButton className="nav-toggle" mobileOpen={mobileNavActive} onClick={() => setMobileNavActive(prev => !prev)}>
             <BarsIcon />
           </NavButton>
         </Wrapper>

@@ -4,11 +4,13 @@ import {Product} from "@/models/Product";
 import {mongooseConnect} from "@/lib/mongoose";
 import NewProducts from "@/components/NewProducts";
 import Footer from "@/components/Footer";
+import HeroVideo from "@/components/HeroVideo";
 
 export default function HomePage({featuredProduct,newProducts}) {
   return (
     <div>
       <Header />
+      <HeroVideo />
       {featuredProduct && <Featured product={featuredProduct} />}
       <NewProducts products={newProducts} />
       <Footer />
