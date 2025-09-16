@@ -30,13 +30,15 @@ export default function HeroVideo() {
   return (
     <VideoWrapper>
       <Video
-        src="/pearls-video.mp4"
         autoPlay
         muted
         loop
         playsInline
-        preload="auto"
-      />
+        preload="metadata"
+      >
+        <source src="/videos/hero-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
+        <source src="/videos/hero-descctop.mp4" type="video/mp4" media="(min-width: 769px)" />
+      </Video>
     </VideoWrapper>
   );
 }

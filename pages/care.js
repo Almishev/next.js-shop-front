@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Center from "@/components/Center";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 export default function CarePage() {
   return (
@@ -14,6 +15,7 @@ export default function CarePage() {
           <li>Почиствайте с мека суха кърпа.</li>
         </ul>
       </Center>
+      <Footer />
     </>
   );
 }

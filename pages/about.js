@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Center from "@/components/Center";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 export default function AboutPage() {
   return (
@@ -13,6 +14,7 @@ export default function AboutPage() {
           лава и маниста. Всяко изделие се изработва внимателно и в ограничени бройки.
         </p>
       </Center>
+      <Footer />
     </>
   );
 }

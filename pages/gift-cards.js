@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Center from "@/components/Center";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 export default function GiftCardsPage() {
   return (
@@ -13,6 +14,7 @@ export default function GiftCardsPage() {
           за да подготвим персонализирано послание и дизайн.
         </p>
       </Center>
+      <Footer />
     </>
   );
 }

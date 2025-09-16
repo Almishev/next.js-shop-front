@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Center from "@/components/Center";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 export default function TermsPage() {
   return (
@@ -19,6 +20,7 @@ export default function TermsPage() {
         <h3>Доставка и връщане</h3>
         <p>Доставката се извършва с куриер. Връщане в срок от 14 дни съгласно закона.</p>
       </Center>
+      <Footer />
     </>
   );
 }

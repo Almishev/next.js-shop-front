@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Center from "@/components/Center";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 export default function CustomOrdersPage() {
   return (
@@ -13,6 +14,7 @@ export default function CustomOrdersPage() {
           ще се свържем с вас с предложение и срок за изработка.
         </p>
       </Center>
+      <Footer />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Center from "@/components/Center";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -24,6 +25,7 @@ export default function PrivacyPolicyPage() {
         <p>Имате право на достъп, корекция, изтриване и оттегляне на съгласие.</p>
         <p>За въпроси: свържете се с нас чрез страницата „Акаунт“ или имейл.</p>
       </Center>
+      <Footer />
     </>
   );
 }
