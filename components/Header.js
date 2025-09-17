@@ -84,7 +84,7 @@ export default function Header() {
     <StyledHeader>
       <Center>
         <Wrapper>
-          <Logo href={'/'}>Artisan Jewelry</Logo>
+          <Logo href={'/'}>Natrufenka Jewelry</Logo>
           <StyledNav className={mobileNavActive ? 'mobile-nav' : ''} mobileNavActive={mobileNavActive}>
             <NavLink href={'/'}>Начало</NavLink>
             <NavLink href={'/products'}>Всички продукти</NavLink>
