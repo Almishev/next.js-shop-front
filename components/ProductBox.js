@@ -140,7 +140,7 @@ export default function ProductBox({_id,title,description,price,images}) {
         <Title href={url}>{title}</Title>
         <PriceRow>
           <Price>
-            ${price}
+            {price} BGN
           </Price>
           <Button block onClick={handleAddToCart} primary outline>
             Добави в кошница

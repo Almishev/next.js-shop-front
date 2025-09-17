@@ -146,7 +146,7 @@ export default function Footer() {
         <FooterContent>
           <FooterSection>
             <Logo>
-              <h2>Artisan Jewelry</h2>
+              <h2>Natrufenka Jewelry</h2>
               <p>
                 Специализирани в ръчно изработени гердани, гривни и комплекти от лава, 
                 маниста и перли. Уникални бижута за дами и мъже, идеални за всеки повод.
@@ -225,7 +225,7 @@ export default function Footer() {
         <BottomBar>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px'}}>
             <div>
-              © {new Date().getFullYear()} Artisan Jewelry. Всички права запазени.
+              © {new Date().getFullYear()} Natrufenka Jewelry. Всички права запазени.
             </div>
             <PaymentMethods>
               <div className="payment-icon">VISA</div>
