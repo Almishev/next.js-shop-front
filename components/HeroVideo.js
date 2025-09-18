@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
 
 const VideoWrapper = styled.div`
   position: relative;
@@ -81,22 +83,89 @@ const ButtonCTA = styled.a`
 `;
 
 export default function HeroVideo() {
+  const [settings, setSettings] = useState({
+    heroVideoDesktop: '',
+    heroVideoMobile: '',
+    heroTitle: 'Natrufenka',
+    heroSubtitle: 'ръчно изработени бижута'
+  });
+  const [currentVideo, setCurrentVideo] = useState('');
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  useEffect(() => {
+    // Set initial video based on screen size
+    updateVideoSource();
+    
+    // Listen for window resize
+    const handleResize = () => {
+      updateVideoSource();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [settings.heroVideoDesktop, settings.heroVideoMobile]);
+
+  useEffect(() => {
+    // Update video source when currentVideo changes
+    if (videoRef.current && currentVideo) {
+      videoRef.current.load(); // Reload video with new source
+    }
+  }, [currentVideo]);
+
+  function updateVideoSource() {
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile && settings.heroVideoMobile) {
+      setCurrentVideo(settings.heroVideoMobile);
+    } else if (settings.heroVideoDesktop) {
+      setCurrentVideo(settings.heroVideoDesktop);
+    } else if (settings.heroVideoMobile) {
+      // Fallback to mobile video if desktop is not available
+      setCurrentVideo(settings.heroVideoMobile);
+    }
+  }
+
+  function fetchSettings() {
+    axios.get('/api/settings').then(result => {
+      setSettings(prev => ({
+        ...prev,
+        heroVideoDesktop: result.data.heroVideoDesktop || '',
+        heroVideoMobile: result.data.heroVideoMobile || '',
+        heroTitle: result.data.heroTitle || 'Natrufenka',
+        heroSubtitle: result.data.heroSubtitle || 'ръчно изработени бижута'
+      }));
+    }).catch(error => {
+      console.log('Error fetching settings:', error);
+      // Keep default values if API fails
+    });
+  }
+
+  // Don't render if no videos are set
+  if (!currentVideo) {
+    return null;
+  }
+
   return (
     <VideoWrapper>
       <Video
+        ref={videoRef}
         autoPlay
         muted
         loop
         playsInline
         preload="metadata"
+        key={currentVideo} // Force re-render when video changes
       >
-        <source src="/videos/hero-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
-        <source src="/videos/hero-descctop.mp4" type="video/mp4" media="(min-width: 769px)" />
+        <source src={currentVideo} type="video/mp4" />
       </Video>
       <Overlay>
         <div>
-          <h1>Natrufenka</h1>
-          <p>ръчно изработени бижута</p>
+          <h1>{settings.heroTitle}</h1>
+          <p>{settings.heroSubtitle}</p>
         </div>
         <Link href="/products" passHref legacyBehavior>
           <ButtonCTA>
