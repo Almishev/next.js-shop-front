@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import styled from "styled-components";
 import Center from "@/components/Center";
 import {useContext, useEffect, useState} from "react";
@@ -13,10 +14,28 @@ const Logo = styled(Link)`
   text-decoration:none;
   position: relative;
   z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+  
+  @media screen and (max-width: 768px) {
+    gap: 8px;
+    font-size: 14px;
+  }
+`;
+
+const LogoImage = styled(Image)`
+  @media screen and (max-width: 768px) {
+    width: 60px !important;
+    height: 24px !important;
+  }
 `;
 const Wrapper = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 20px 0;
 `;
 const StyledNav = styled.nav`
@@ -39,6 +58,7 @@ const StyledNav = styled.nav`
     display: flex;
     position: static;
     padding: 0;
+    align-items: center;
   }
 `;
 const NavLink = styled(Link)`
@@ -84,7 +104,16 @@ export default function Header() {
     <StyledHeader>
       <Center>
         <Wrapper>
-          <Logo href={'/'}>Natrufenka Jewelry</Logo>
+          <Logo href={'/'}>
+            <LogoImage 
+              src="/натруфенка.png" 
+              alt="Natrufenka" 
+              width={100} 
+              height={40}
+              style={{objectFit: 'contain'}}
+            />
+            Natrufenka Jewelry
+          </Logo>
           <StyledNav className={mobileNavActive ? 'mobile-nav' : ''} mobileNavActive={mobileNavActive}>
             <NavLink href={'/'}>Начало</NavLink>
             <NavLink href={'/products'}>Всички продукти</NavLink>
