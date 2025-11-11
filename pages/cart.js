@@ -67,6 +67,51 @@ const CityHolder = styled.div`
   gap: 5px;
 `;
 
+const PaymentMethodContainer = styled.div`
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  border: 2px solid #eee;
+`;
+
+const PaymentMethodLabel = styled.label`
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 2px solid ${props => props.selected ? '#222' : '#ddd'};
+  background-color: ${props => props.selected ? '#f0f0f0' : '#fff'};
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #222;
+    background-color: #f9f9f9;
+  }
+  
+  input[type="radio"] {
+    margin-right: 12px;
+    cursor: pointer;
+  }
+  
+  .payment-info {
+    flex: 1;
+    
+    .payment-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #222;
+    }
+    
+    .payment-description {
+      font-size: 0.9rem;
+      color: #666;
+    }
+  }
+`;
+
 export default function CartPage() {
   const {cartProducts,addProduct,removeProduct,clearCart} = useContext(CartContext);
   const [products,setProducts] = useState([]);
@@ -79,6 +124,7 @@ export default function CartPage() {
   const [country,setCountry] = useState('');
   const [isSuccess,setIsSuccess] = useState(false);
   const [shippingPrice,setShippingPrice] = useState(5);
+  const [paymentMethod,setPaymentMethod] = useState('stripe');
   useEffect(() => {
     if (cartProducts.length > 0) {
       axios.post('/api/cart', {ids:cartProducts})
@@ -106,9 +152,13 @@ export default function CartPage() {
     if (typeof window === 'undefined') {
       return;
     }
-    if (window?.location.href.includes('success')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === '1') {
       setIsSuccess(true);
       clearCart();
+    }
+    if (urlParams.get('canceled') === '1') {
+      alert('Плащането беше отменено. Можете да опитате отново.');
     }
   }, [clearCart]);
 
@@ -184,15 +234,21 @@ export default function CartPage() {
     
     console.log('Sending checkout data:', {
       name,email,phone,city,postalCode,streetAddress,country,
-      cartProducts,shippingPrice,
+      cartProducts,shippingPrice,paymentMethod,
     });
     
     try {
       const response = await axios.post('/api/checkout', {
         name,email,phone,city,postalCode,streetAddress,country,
         cartProducts,shippingPrice: Number(shippingPrice),
+        paymentMethod: paymentMethod,
       });
       if (response.data.success) {
+        // Ако е Stripe плащане - пренасочваме към Stripe Checkout
+        if (response.data.url) {
+          window.location.href = response.data.url;
+          return;
+        }
         // За наложен платеж - директно показваме успех
         setIsSuccess(true);
         clearCart();
@@ -219,7 +275,7 @@ export default function CartPage() {
           <ColumnsWrapper>
             <Box>
               <h1>Благодарим за поръчката!</h1>
-              <p>Поръчката е създадена успешно. Ще платите при доставка (наложен платеж).</p>
+              <p>Поръчката е създадена успешно.</p>
               <p>Ще ви изпратим имейл, когато поръчката бъде изпратена.</p>
             </Box>
           </ColumnsWrapper>
@@ -329,9 +385,48 @@ export default function CartPage() {
                      value={country}
                      name="country"
                      onChange={ev => setCountry(ev.target.value)}/>
+              
+              <PaymentMethodContainer>
+                <h3 style={{marginTop: 0, marginBottom: '15px'}}>Метод на плащане</h3>
+                
+                <PaymentMethodLabel 
+                  selected={paymentMethod === 'stripe'}
+                  onClick={() => setPaymentMethod('stripe')}
+                >
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
+                    value="stripe"
+                    checked={paymentMethod === 'stripe'}
+                    onChange={() => setPaymentMethod('stripe')}
+                  />
+                  <div className="payment-info">
+                    <div className="payment-title">💳 Плащане с карта (Stripe)</div>
+                    <div className="payment-description">Безопасно онлайн плащане с дебитна или кредитна карта</div>
+                  </div>
+                </PaymentMethodLabel>
+                
+                <PaymentMethodLabel 
+                  selected={paymentMethod === 'cash'}
+                  onClick={() => setPaymentMethod('cash')}
+                >
+                  <input 
+                    type="radio" 
+                    name="paymentMethod" 
+                    value="cash"
+                    checked={paymentMethod === 'cash'}
+                    onChange={() => setPaymentMethod('cash')}
+                  />
+                  <div className="payment-info">
+                    <div className="payment-title">💰 Наложен платеж</div>
+                    <div className="payment-description">Плащане при получаване на поръчката</div>
+                  </div>
+                </PaymentMethodLabel>
+              </PaymentMethodContainer>
+              
               <Button black block
                       onClick={goToPayment}>
-                Поръчай с наложен платеж
+                {paymentMethod === 'stripe' ? 'Поръчай с карта' : 'Поръчай с наложен платеж'}
               </Button>
             </Box>
           )}

@@ -1,48 +1,124 @@
 import {mongooseConnect} from "@/lib/mongoose";
-// const stripe = require('stripe')(process.env.STRIPE_SK); // Закоментирано - използваме наложен платеж
-// import {buffer} from 'micro'; // Закоментирано - не е нужно за наложен платеж
+const stripe = require('stripe')(process.env.STRIPE_SK);
+import {buffer} from 'micro';
 import {Order} from "@/models/Order";
+import {Product} from "@/models/Product";
 
-// const endpointSecret = "whsec_634d3142fd2755bd61adaef74ce0504bd2044848c8aac301ffdb56339a0ca78d"; // Закоментирано
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export default async function handler(req,res) {
-  // Закоментирано Stripe webhook - не е нужно за наложен платеж
-  res.status(200).send('Webhook деактивиран - използваме наложен платеж');
-  
-  // await mongooseConnect();
-  // const sig = req.headers['stripe-signature'];
+  if (req.method !== 'POST') {
+    res.status(405).send('Method not allowed');
+    return;
+  }
 
-  // let event;
+  await mongooseConnect();
+  const sig = req.headers['stripe-signature'];
 
-  // try {
-  //   event = stripe.webhooks.constructEvent(await buffer(req), sig, endpointSecret);
-  // } catch (err) {
-  //   res.status(400).send(`Webhook Error: ${err.message}`);
-  //   return;
-  // }
+  let event;
 
-  // // Handle the event
-  // switch (event.type) {
-  //   case 'checkout.session.completed':
-  //     const data = event.data.object;
-  //     const orderId = data.metadata.orderId;
-  //     const paid = data.payment_status === 'paid';
-  //     if (orderId && paid) {
-  //       await Order.findByIdAndUpdate(orderId,{
-  //         paid:true,
-  //       })
-  //     }
-  //     break;
-  //   default:
-  //     console.log(`Unhandled event type ${event.type}`);
-  // }
+  try {
+    const buf = await buffer(req);
+    event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    res.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
 
-  // res.status(200).send('ok');
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      const orderId = session.metadata?.orderId;
+      const paymentStatus = session.payment_status;
+      
+      console.log('Checkout session completed:', {
+        orderId,
+        paymentStatus,
+        sessionId: session.id
+      });
+
+      if (orderId && paymentStatus === 'paid') {
+        try {
+          // Обновяваме поръчката като платена
+          await Order.findByIdAndUpdate(orderId, {
+            paid: true,
+          });
+
+          // Намаляваме наличностите след успешно плащане
+          let cartProducts = [];
+          try {
+            if (session.metadata?.cartProducts) {
+              cartProducts = JSON.parse(session.metadata.cartProducts);
+            }
+          } catch (e) {
+            console.error('Error parsing cartProducts from metadata:', e);
+          }
+
+          // Ако няма cartProducts в metadata, опитваме от line_items
+          // ВАЖНО: Това е fallback и не е идеално, защото търси по заглавие
+          // По-добре е винаги да има cartProducts в metadata
+          if (cartProducts.length === 0) {
+            console.warn('No cartProducts in metadata, trying to extract from line_items');
+            const order = await Order.findById(orderId);
+            if (order && order.line_items) {
+              const lineItems = order.line_items;
+              for (const item of lineItems) {
+                if (item.price_data && item.price_data.product_data) {
+                  const productName = item.price_data.product_data.name;
+                  if (productName !== 'Доставка') {
+                    // Търсим по заглавие - може да има проблеми с дублиращи се имена
+                    const product = await Product.findOne({ title: productName });
+                    if (product) {
+                      const quantity = item.quantity || 1;
+                      // Добавяме продукта толкова пъти, колкото е quantity
+                      for (let i = 0; i < quantity; i++) {
+                        cartProducts.push(product._id.toString());
+                      }
+                    } else {
+                      console.error(`Product not found by title: ${productName}`);
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Намаляваме наличностите
+          const uniqueIds = [...new Set(cartProducts)];
+          for (const productId of uniqueIds) {
+            try {
+              const qty = cartProducts.filter(id => id === productId).length;
+              if (!qty) continue;
+              const prod = await Product.findById(productId);
+              if (!prod) continue;
+              const newStock = Math.max(0, (prod.stock || 0) - qty);
+              if (newStock === 0) {
+                await Product.deleteOne({ _id: productId });
+              } else {
+                await Product.updateOne({ _id: productId }, { stock: newStock });
+              }
+            } catch (prodError) {
+              console.error(`Error updating product ${productId}:`, prodError);
+            }
+          }
+
+          console.log('Order updated successfully:', orderId);
+        } catch (updateError) {
+          console.error('Error updating order:', updateError);
+          // Въпреки грешката, връщаме 200 за да не преизпраща Stripe webhook-а
+          // Но логираме грешката за debugging
+        }
+      }
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.status(200).send('ok');
 }
 
 export const config = {
   api: {bodyParser:false,}
 };
-
-// bright-thrift-cajole-lean
-// acct_1Lj5ADIUXXMmgk2a
