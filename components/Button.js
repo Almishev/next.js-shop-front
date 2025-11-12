@@ -58,6 +58,49 @@ export const ButtonStyle = css`
 
 const StyledButton = styled.button`
   ${ButtonStyle}
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    ${props => props.white && !props.outline && css`
+      background-color: #f5f5f5;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    `}
+    ${props => props.white && props.outline && css`
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: #fff;
+    `}
+    ${props => props.black && !props.outline && css`
+      background-color: #333;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    `}
+    ${props => props.black && props.outline && css`
+      background-color: rgba(0, 0, 0, 0.05);
+      border-color: #333;
+    `}
+    ${props => props.primary && !props.outline && css`
+      background-color: ${primary};
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    `}
+    ${props => props.primary && props.outline && css`
+      background-color: ${primary};
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    `}
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 export default function Button({children,...rest}) {

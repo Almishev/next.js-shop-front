@@ -7,6 +7,7 @@ import {Product} from "@/models/Product";
 import ProductsGrid from "@/components/ProductsGrid";
 import Title from "@/components/Title";
 import Link from "next/link";
+import Footer from "@/components/Footer";
 
 const Breadcrumb = styled.div`
   margin-bottom: 20px;
@@ -69,6 +70,7 @@ export default function CategoryPage({category, products, parentCategory}) {
           <p>The category you&apos;re looking for doesn&apos;t exist.</p>
           <Link href="/categories">← Back to Categories</Link>
         </Center>
+        <Footer />
       </>
     );
   }
@@ -89,18 +91,19 @@ export default function CategoryPage({category, products, parentCategory}) {
             </CategoryDescription>
           )}
           <ProductCount>
-            {products.length} {products.length === 1 ? 'product' : 'products'} in this category
+            {products.length} {products.length === 1 ? 'продукт' : 'продукта'} в тази категория
           </ProductCount>
         </CategoryInfo>
 
         {products.length === 0 ? (
           <NoProducts>
-            No products found in this category.
+            Няма намерени продукти в тази категория.
           </NoProducts>
         ) : (
           <ProductsGrid products={products} />
         )}
       </Center>
+      <Footer />
     </>
   );
 }

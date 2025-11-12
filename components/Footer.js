@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import Center from "@/components/Center";
 import Link from "next/link";
+import {useState, useEffect} from "react";
+import axios from "axios";
 
 const StyledFooter = styled.footer`
   background-color: #222;
@@ -140,6 +142,21 @@ const PaymentMethods = styled.div`
 `;
 
 export default function Footer() {
+  const [mainCategories, setMainCategories] = useState([]);
+
+  useEffect(() => {
+    // Взимаме всички категории от API
+    axios.get('/api/categories')
+      .then(response => {
+        // Филтрираме само главните категории (тези без parent)
+        const mainCats = response.data.filter(cat => !cat.parent);
+        setMainCategories(mainCats);
+      })
+      .catch(error => {
+        console.error('Error fetching categories:', error);
+      });
+  }, []);
+
   return (
     <StyledFooter>
       <Center>
@@ -176,12 +193,11 @@ export default function Footer() {
             <h3>Категории</h3>
             <ul>
               <li><Link href="/products">Всички продукти</Link></li>
-              <li><Link href="/products?category=gerdani">Гердани от перли</Link></li>
-              <li><Link href="/products?category=griuni">Гривни от лава</Link></li>
-              <li><Link href="/products?category=komplekti">Комплекти</Link></li>
-              <li><Link href="/products?category=mashki">Мъжки бижута</Link></li>
-              <li><Link href="/products?category=damski">Дамски бижута</Link></li>
-              <li><Link href="/products?category=manista">Бижута с маниста</Link></li>
+              {mainCategories.map(category => (
+                <li key={category._id}>
+                  <Link href={`/category/${category._id}`}>{category.name}</Link>
+                </li>
+              ))}
             </ul>
           </FooterSection>
 
@@ -189,9 +205,6 @@ export default function Footer() {
             <h3>Информация</h3>
             <ul>
               <li><Link href="/about">За нас</Link></li>
-              <li><Link href="/care">Грижа за бижутата</Link></li>
-              <li><Link href="/gift-cards">Подаръчни карти</Link></li>
-              <li><Link href="/custom-orders">Поръчки по избор</Link></li>
               <li><Link href="/privacy-policy">Политика на поверителност</Link></li>
               <li><Link href="/terms">Общи условия</Link></li>
             </ul>

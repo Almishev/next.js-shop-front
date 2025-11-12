@@ -3,6 +3,7 @@ const stripe = require('stripe')(process.env.STRIPE_SK);
 import {buffer} from 'micro';
 import {Order} from "@/models/Order";
 import {Product} from "@/models/Product";
+import {deleteS3Objects} from "@/lib/s3";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -181,7 +182,18 @@ export default async function handler(req,res) {
               const newStock = Math.max(0, (prod.stock || 0) - qty);
               
               if (newStock === 0) {
+                // Взимаме снимките преди изтриване
+                const images = Array.isArray(prod?.images) ? prod.images : [];
                 await Product.deleteOne({ _id: objectId });
+                // Изтриваме снимките от S3
+                if (images.length > 0) {
+                  try {
+                    await deleteS3Objects(images);
+                    console.log(`Deleted ${images.length} images from S3 for product ${productId}`);
+                  } catch (s3Error) {
+                    console.error(`Error deleting images from S3 for product ${productId}:`, s3Error);
+                  }
+                }
                 console.log(`Product ${productId} deleted (stock reached 0)`);
               } else {
                 await Product.updateOne({ _id: objectId }, { stock: newStock });

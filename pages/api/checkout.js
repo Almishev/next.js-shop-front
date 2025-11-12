@@ -2,6 +2,7 @@ import {mongooseConnect} from "@/lib/mongoose";
 import {Product} from "@/models/Product";
 import {Order} from "@/models/Order";
 const stripe = require('stripe')(process.env.STRIPE_SK);
+import {deleteS3Objects} from "@/lib/s3";
 
 export default async function handler(req,res) {
   if (req.method !== 'POST') {
@@ -125,7 +126,18 @@ export default async function handler(req,res) {
           if (!prod) continue;
           const newStock = Math.max(0, (prod.stock || 0) - qty);
           if (newStock === 0) {
+            // Взимаме снимките преди изтриване
+            const images = Array.isArray(prod?.images) ? prod.images : [];
             await Product.deleteOne({_id: productId});
+            // Изтриваме снимките от S3
+            if (images.length > 0) {
+              try {
+                await deleteS3Objects(images);
+                console.log(`Deleted ${images.length} images from S3 for product ${productId}`);
+              } catch (s3Error) {
+                console.error(`Error deleting images from S3 for product ${productId}:`, s3Error);
+              }
+            }
           } else {
             await Product.updateOne({_id: productId}, {stock: newStock});
           }

@@ -6,6 +6,7 @@ import {Category} from "@/models/Category";
 import {Product} from "@/models/Product";
 import Link from "next/link";
 import Title from "@/components/Title";
+import Footer from "@/components/Footer";
 
 const CategoryGrid = styled.div`
   display: grid;
@@ -85,6 +86,7 @@ export default function CategoriesPage({categories}) {
           </CategoryGrid>
         )}
       </Center>
+      <Footer />
     </>
   );
 }
