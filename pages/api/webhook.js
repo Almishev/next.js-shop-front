@@ -7,13 +7,22 @@ import {Product} from "@/models/Product";
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export default async function handler(req,res) {
-  // Логваме метода за дебъг
+  // Логваме метода за дебъг - ВИНАГИ логваме, дори и при GET заявки
+  console.log('=== WEBHOOK ENDPOINT CALLED ===');
   console.log('Webhook request method:', req.method);
-  console.log('Webhook request headers:', req.headers);
+  console.log('Webhook request URL:', req.url);
+  console.log('Webhook request headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Timestamp:', new Date().toISOString());
   
   if (req.method !== 'POST') {
     console.error('Invalid method:', req.method);
-    res.status(405).json({error: 'Method not allowed', method: req.method});
+    console.error('Expected POST, got:', req.method);
+    res.status(405).json({
+      error: 'Method not allowed', 
+      method: req.method,
+      allowed: ['POST'],
+      message: 'This endpoint only accepts POST requests'
+    });
     return;
   }
 
