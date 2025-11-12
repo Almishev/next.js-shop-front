@@ -27,6 +27,9 @@ export default async function handler(req,res) {
   }
 
   // Handle the event
+  console.log('Webhook event received:', event.type);
+  console.log('Event data:', JSON.stringify(event.data, null, 2));
+  
   switch (event.type) {
     case 'checkout.session.completed':
       const session = event.data.object;
@@ -36,11 +39,18 @@ export default async function handler(req,res) {
       console.log('Checkout session completed:', {
         orderId,
         paymentStatus,
-        sessionId: session.id
+        sessionId: session.id,
+        amount_total: session.amount_total,
+        currency: session.currency,
+        payment_status: session.payment_status,
+        metadata: session.metadata
       });
 
       if (orderId && paymentStatus === 'paid') {
         try {
+          console.log('Processing paid order:', orderId);
+          console.log('Session metadata:', session.metadata);
+          
           // Обновяваме поръчката като платена
           await Order.findByIdAndUpdate(orderId, {
             paid: true,
@@ -50,17 +60,25 @@ export default async function handler(req,res) {
           let cartProducts = [];
           try {
             if (session.metadata?.cartProducts) {
+              console.log('Raw cartProducts from metadata:', session.metadata.cartProducts);
               cartProducts = JSON.parse(session.metadata.cartProducts);
+              console.log('Parsed cartProducts:', cartProducts);
+            } else {
+              console.log('No cartProducts in metadata');
             }
           } catch (e) {
             console.error('Error parsing cartProducts from metadata:', e);
+            console.error('Metadata cartProducts value:', session.metadata?.cartProducts);
           }
 
           // Ако няма cartProducts в metadata, опитваме от line_items
+          let order = null;
           if (cartProducts.length === 0) {
-            const order = await Order.findById(orderId);
+            console.log('cartProducts is empty, trying to get from order line_items');
+            order = await Order.findById(orderId);
             if (order && order.line_items) {
               const lineItems = order.line_items;
+              console.log('Order line_items:', lineItems);
               for (const item of lineItems) {
                 if (item.price_data && item.price_data.product_data) {
                   const productName = item.price_data.product_data.name;
@@ -68,20 +86,32 @@ export default async function handler(req,res) {
                     const product = await Product.findOne({ title: productName });
                     if (product) {
                       const quantity = item.quantity || 1;
+                      console.log(`Found product "${productName}" with quantity ${quantity}`);
                       // Добавяме продукта толкова пъти, колкото е quantity
                       for (let i = 0; i < quantity; i++) {
                         cartProducts.push(product._id.toString());
                       }
+                    } else {
+                      console.error(`Product not found by name: ${productName}`);
                     }
                   }
                 }
               }
+            } else {
+              console.error('Order not found or has no line_items');
             }
           }
 
           // Намаляваме наличностите
+          console.log('Cart products before processing:', cartProducts);
           const uniqueIds = [...new Set(cartProducts)];
+          console.log('Unique product IDs:', uniqueIds);
           const mongoose = require('mongoose');
+          
+          if (uniqueIds.length === 0) {
+            console.error('No products found to update stock!');
+            console.log('Order line_items:', order?.line_items);
+          }
           
           for (const productId of uniqueIds) {
             try {
