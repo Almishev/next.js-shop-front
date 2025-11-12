@@ -108,6 +108,7 @@ export default async function handler(req,res) {
     const orderDoc = await Order.create({
       line_items,name,email,phone,city,postalCode,
       streetAddress,country,paid:false,
+      paymentMethod: paymentMethod || 'stripe',
     });
     
     console.log('Created order:', orderDoc._id.toString());

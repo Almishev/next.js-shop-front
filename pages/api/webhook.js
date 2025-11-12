@@ -81,17 +81,39 @@ export default async function handler(req,res) {
 
           // Намаляваме наличностите
           const uniqueIds = [...new Set(cartProducts)];
+          const mongoose = require('mongoose');
+          
           for (const productId of uniqueIds) {
             try {
-              const qty = cartProducts.filter(id => id === productId).length;
+              const qty = cartProducts.filter(id => id.toString() === productId.toString()).length;
               if (!qty) continue;
-              const prod = await Product.findById(productId);
-              if (!prod) continue;
+              
+              // Конвертираме string ID в ObjectId
+              let objectId;
+              try {
+                objectId = mongoose.Types.ObjectId.isValid(productId) 
+                  ? new mongoose.Types.ObjectId(productId) 
+                  : productId;
+              } catch (e) {
+                console.error(`Invalid product ID: ${productId}`, e);
+                continue;
+              }
+              
+              const prod = await Product.findById(objectId);
+              if (!prod) {
+                console.error(`Product not found: ${productId}`);
+                continue;
+              }
+              
+              console.log(`Updating stock for product ${productId}: current=${prod.stock}, quantity=${qty}`);
               const newStock = Math.max(0, (prod.stock || 0) - qty);
+              
               if (newStock === 0) {
-                await Product.deleteOne({ _id: productId });
+                await Product.deleteOne({ _id: objectId });
+                console.log(`Product ${productId} deleted (stock reached 0)`);
               } else {
-                await Product.updateOne({ _id: productId }, { stock: newStock });
+                await Product.updateOne({ _id: objectId }, { stock: newStock });
+                console.log(`Product ${productId} stock updated to ${newStock}`);
               }
             } catch (prodError) {
               console.error(`Error updating product ${productId}:`, prodError);
