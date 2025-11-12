@@ -24,13 +24,37 @@ export default async function handler(req,res) {
   
   const productsIds = cartProducts;
   const uniqueIds = [...new Set(productsIds)];
-  const productsInfos = await Product.find({_id:uniqueIds});
+  
+  // Конвертираме ID-тата в ObjectId за правилно търсене
+  const mongoose = require('mongoose');
+  const objectIds = uniqueIds.map(id => {
+    try {
+      return mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
+    } catch (e) {
+      return id;
+    }
+  });
+  
+  const productsInfos = await Product.find({_id: {$in: objectIds}});
   console.log('Found products:', productsInfos.length);
+  console.log('Looking for IDs:', uniqueIds);
+  console.log('Found product IDs:', productsInfos.map(p => p._id.toString()));
 
   // Валидация на наличността преди създаване на поръчка
   for (const productId of uniqueIds) {
-    const productInfo = productsInfos.find(p => p._id.toString() === productId);
+    // Търсим по string сравнение, защото productId е string
+    const productInfo = productsInfos.find(p => {
+      const productIdStr = p._id.toString();
+      const searchIdStr = productId.toString();
+      return productIdStr === searchIdStr;
+    });
+    
     if (!productInfo) {
+      console.error('Product not found:', {
+        searchedId: productId,
+        searchedIdType: typeof productId,
+        availableIds: productsInfos.map(p => ({id: p._id.toString(), type: typeof p._id}))
+      });
       return res.status(400).json({
         success: false,
         error: `Продукт с ID ${productId} не е намерен`
@@ -50,8 +74,12 @@ export default async function handler(req,res) {
 
   let line_items = [];
   for (const productId of uniqueIds) {
-    const productInfo = productsInfos.find(p => p._id.toString() === productId);
-    const quantity = productsIds.filter(id => id === productId)?.length || 0;
+    const productInfo = productsInfos.find(p => {
+      const productIdStr = p._id.toString();
+      const searchIdStr = productId.toString();
+      return productIdStr === searchIdStr;
+    });
+    const quantity = productsIds.filter(id => id.toString() === productId.toString())?.length || 0;
     if (quantity > 0 && productInfo) {
       line_items.push({
         quantity,
