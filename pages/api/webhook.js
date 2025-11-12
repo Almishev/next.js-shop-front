@@ -7,13 +7,38 @@ import {Product} from "@/models/Product";
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export default async function handler(req,res) {
+  // Логваме метода за дебъг
+  console.log('Webhook request method:', req.method);
+  console.log('Webhook request headers:', req.headers);
+  
   if (req.method !== 'POST') {
-    res.status(405).send('Method not allowed');
+    console.error('Invalid method:', req.method);
+    res.status(405).json({error: 'Method not allowed', method: req.method});
     return;
   }
 
-  await mongooseConnect();
+  // Проверка за webhook secret
+  if (!endpointSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not set');
+    res.status(500).send('Webhook secret not configured');
+    return;
+  }
+
+  try {
+    await mongooseConnect();
+  } catch (dbError) {
+    console.error('MongoDB connection error:', dbError);
+    res.status(500).send('Database connection error');
+    return;
+  }
+
   const sig = req.headers['stripe-signature'];
+  
+  if (!sig) {
+    console.error('Missing stripe-signature header');
+    res.status(400).send('Missing signature');
+    return;
+  }
 
   let event;
 
@@ -22,6 +47,8 @@ export default async function handler(req,res) {
     event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
+    console.error('Signature:', sig);
+    console.error('Endpoint secret exists:', !!endpointSecret);
     res.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
@@ -46,7 +73,13 @@ export default async function handler(req,res) {
         metadata: session.metadata
       });
 
-      if (orderId && paymentStatus === 'paid') {
+      if (!orderId) {
+        console.log('No orderId in metadata, skipping');
+        res.status(200).send('ok');
+        return;
+      }
+
+      if (paymentStatus === 'paid') {
         try {
           console.log('Processing paid order:', orderId);
           console.log('Session metadata:', session.metadata);
@@ -153,18 +186,26 @@ export default async function handler(req,res) {
           console.log('Order updated successfully:', orderId);
         } catch (updateError) {
           console.error('Error updating order:', updateError);
+          // Връщаме успех дори при грешка, за да не се опитва Stripe отново
         }
+      } else {
+        console.log(`Payment status is not 'paid': ${paymentStatus}`);
       }
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
 
-  res.status(200).send('ok');
+  // Винаги връщаме успешен response
+  // Използваме .json() за по-надежден response
+  return res.status(200).json({received: true});
 }
 
 export const config = {
-  api: {bodyParser:false,}
+  api: {
+    bodyParser: false,
+    externalResolver: true,
+  },
 };
 
 // bright-thrift-cajole-lean
