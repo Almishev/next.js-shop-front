@@ -57,10 +57,7 @@ export default async function handler(req,res) {
           }
 
           // Ако няма cartProducts в metadata, опитваме от line_items
-          // ВАЖНО: Това е fallback и не е идеално, защото търси по заглавие
-          // По-добре е винаги да има cartProducts в metadata
           if (cartProducts.length === 0) {
-            console.warn('No cartProducts in metadata, trying to extract from line_items');
             const order = await Order.findById(orderId);
             if (order && order.line_items) {
               const lineItems = order.line_items;
@@ -68,7 +65,6 @@ export default async function handler(req,res) {
                 if (item.price_data && item.price_data.product_data) {
                   const productName = item.price_data.product_data.name;
                   if (productName !== 'Доставка') {
-                    // Търсим по заглавие - може да има проблеми с дублиращи се имена
                     const product = await Product.findOne({ title: productName });
                     if (product) {
                       const quantity = item.quantity || 1;
@@ -76,8 +72,6 @@ export default async function handler(req,res) {
                       for (let i = 0; i < quantity; i++) {
                         cartProducts.push(product._id.toString());
                       }
-                    } else {
-                      console.error(`Product not found by title: ${productName}`);
                     }
                   }
                 }
@@ -107,8 +101,6 @@ export default async function handler(req,res) {
           console.log('Order updated successfully:', orderId);
         } catch (updateError) {
           console.error('Error updating order:', updateError);
-          // Въпреки грешката, връщаме 200 за да не преизпраща Stripe webhook-а
-          // Но логираме грешката за debugging
         }
       }
       break;
@@ -122,3 +114,6 @@ export default async function handler(req,res) {
 export const config = {
   api: {bodyParser:false,}
 };
+
+// bright-thrift-cajole-lean
+// acct_1Lj5ADIUXXMmgk2a

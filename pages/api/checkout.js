@@ -5,7 +5,7 @@ const stripe = require('stripe')(process.env.STRIPE_SK);
 
 export default async function handler(req,res) {
   if (req.method !== 'POST') {
-    res.status(405).json({error: 'should be a POST request'});
+    res.json('should be a POST request');
     return;
   }
   const {
@@ -26,6 +26,27 @@ export default async function handler(req,res) {
   const uniqueIds = [...new Set(productsIds)];
   const productsInfos = await Product.find({_id:uniqueIds});
   console.log('Found products:', productsInfos.length);
+
+  // Валидация на наличността преди създаване на поръчка
+  for (const productId of uniqueIds) {
+    const productInfo = productsInfos.find(p => p._id.toString() === productId);
+    if (!productInfo) {
+      return res.status(400).json({
+        success: false,
+        error: `Продукт с ID ${productId} не е намерен`
+      });
+    }
+    
+    const quantity = productsIds.filter(id => id === productId)?.length || 0;
+    const availableStock = productInfo.stock || 0;
+    
+    if (quantity > availableStock) {
+      return res.status(400).json({
+        success: false,
+        error: `Няма достатъчна наличност за "${productInfo.title}". Налични: ${availableStock}, Искани: ${quantity}`
+      });
+    }
+  }
 
   let line_items = [];
   for (const productId of uniqueIds) {

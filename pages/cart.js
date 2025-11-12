@@ -152,13 +152,9 @@ export default function CartPage() {
     if (typeof window === 'undefined') {
       return;
     }
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === '1') {
+    if (window?.location.href.includes('success')) {
       setIsSuccess(true);
       clearCart();
-    }
-    if (urlParams.get('canceled') === '1') {
-      alert('Плащането беше отменено. Можете да опитате отново.');
     }
   }, [clearCart]);
 
@@ -206,6 +202,17 @@ export default function CartPage() {
     } catch (e) {}
   }, []);
   function moreOfThisProduct(id) {
+    const product = products.find(p => p._id === id);
+    if (!product) return;
+    
+    const currentQuantity = cartProducts.filter(pid => pid === id).length;
+    const availableStock = product.stock || 0;
+    
+    if (currentQuantity >= availableStock) {
+      alert(`Няма достатъчна наличност за "${product.title}". Налични: ${availableStock}`);
+      return;
+    }
+    
     addProduct(id);
   }
   function lessOfThisProduct(id) {
@@ -257,7 +264,8 @@ export default function CartPage() {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Грешка при създаване на поръчката. Моля, опитайте отново.');
+      const errorMessage = error.response?.data?.error || error.message || 'Грешка при създаване на поръчката. Моля, опитайте отново.';
+      alert(errorMessage);
     }
   }
   let subtotal = 0;
@@ -317,9 +325,17 @@ export default function CartPage() {
                           onClick={() => lessOfThisProduct(product._id)}>-</Button>
                         <QuantityLabel>
                           {cartProducts.filter(id => id === product._id).length}
+                          {product.stock !== undefined && (
+                            <span style={{fontSize: '0.85em', color: '#666', marginLeft: '8px'}}>
+                              / {product.stock} налични
+                            </span>
+                          )}
                         </QuantityLabel>
                         <Button
-                          onClick={() => moreOfThisProduct(product._id)}>+</Button>
+                          onClick={() => moreOfThisProduct(product._id)}
+                          disabled={product.stock !== undefined && cartProducts.filter(id => id === product._id).length >= (product.stock || 0)}>
+                          +
+                        </Button>
                       </td>
                       <td>
                         {cartProducts.filter(id => id === product._id).length * product.price} BGN

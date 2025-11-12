@@ -87,7 +87,7 @@ const SmallMuted = styled.div`
 `;
 
 export default function ProductPage({product}) {
-  const {addProduct} = useContext(CartContext);
+  const {addProduct, cartProducts} = useContext(CartContext);
   const [reviews,setReviews] = useState([]);
   const [rating,setRating] = useState(5);
   const [titleText,setTitleText] = useState('');
@@ -98,6 +98,17 @@ export default function ProductPage({product}) {
   }, [product._id]);
   
   const handleAddToCart = () => {
+    const currentQuantity = cartProducts.filter(id => id === product._id).length;
+    const availableStock = product.stock || 0;
+    
+    if (currentQuantity >= availableStock) {
+      toast.error(`Няма достатъчна наличност. Налични: ${availableStock}`, {
+        icon: '⚠️',
+        duration: 3000,
+      });
+      return;
+    }
+    
     addProduct(product._id);
     toast.success(`${product.title} е добавен в кошницата!`, {
       icon: '🛒',
@@ -132,9 +143,17 @@ export default function ProductPage({product}) {
             <PriceRow>
               <div>
                 <Price>${product.price}</Price>
+                {product.stock !== undefined && (
+                  <div style={{fontSize: '0.9rem', color: product.stock > 0 ? '#16a34a' : '#dc2626', marginTop: '8px'}}>
+                    {product.stock > 0 ? `Наличност: ${product.stock} бр.` : 'Няма наличност'}
+                  </div>
+                )}
               </div>
               <div>
-                <Button primary onClick={handleAddToCart}>
+                <Button 
+                  primary 
+                  onClick={handleAddToCart}
+                  disabled={product.stock !== undefined && product.stock <= 0}>
                   <CartIcon />Добави в кошница
                 </Button>
               </div>
